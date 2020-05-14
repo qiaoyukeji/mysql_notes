@@ -1514,6 +1514,168 @@ mysql> select sno,cno,grade from score,grade where dgree between low and upp;
 | 109 | 6-166 | B     |
 +-----+-------+-------+
 12 rows in set (0.00 sec)
+```
+#### SQL 四种连接查询 
+> 内连接 `inner join` 或者 `join`
+
+> 外连接
+> > 1. 左连接 `left join` 或者 `left outer join`
+>> 2. 右连接 `right join` 或者 `right outer join`
+>> 3. 完全外连接 `full join` 或者 `full outer join`
+
+
+##### 创建两个表
+> 1. person 表
+> > id
+> name
+> cardId
+
+> 2. card 表
+> > id 
+> name
+
+
+```mysql
+# 创建数据库 与 两个表
+create database testJoin;
+
+create table person (
+    id int,
+    name varchar(20),
+    cardId int
+);
+
+create table card(
+    id int,
+    name varchar(20)
+);
+
+
+# 插入数据
+INSERT INTO card VALUES (1, '饭卡'), (2, '建行卡'), (3, '农行卡'), (4, '工商卡'), (5, '邮政卡');
+mysql> select * from card;
++------+-----------+
+| id   | name      |
++------+-----------+
+|    1 | 饭卡      |
+|    2 | 建行卡    |
+|    3 | 农行卡    |
+|    4 | 工商卡    |
+|    5 | 邮政卡    |
++------+-----------+
+5 rows in set (0.00 sec)
+
+
+INSERT INTO person VALUES (1, '张三', 1), (2, '李四', 3), (3, '王五', 6);
+mysql> select * from person; 
++------+--------+--------+
+| id   | name   | cardId |
++------+--------+--------+
+|    1 | 张三   |      1 |
+|    2 | 李四   |      3 |
+|    3 | 王五   |      6 |
++------+--------+--------+
+3 rows in set (0.00 sec)
+
+```
+分析两张表发现，`person` 表并没有为 `cardId` 字段设置一个在 `card` 表中对应的 `id` 外键。如果设置了的话，`person` 中 `cardId` 字段值为 `6` 的行就插不进去，因为该 `cardId` 值在 `card` 表中并没有。
+
+##### 1. inner join 查询（内连接）
+内联查询，两张表中的数据，通过某个字段相连，查询出相关的记录数据。
+```mysql
+# inner join 查询
+mysql> select * from person inner join card on person.cardId=card.id;
++------+--------+--------+------+-----------+
+| id   | name   | cardId | id   | name      |
++------+--------+--------+------+-----------+
+|    1 | 张三   |      1 |    1 | 饭卡      |
+|    2 | 李四   |      3 |    3 | 农行卡    |
++------+--------+--------+------+-----------+
+2 rows in set (0.00 sec)
+
+## 其中 inner 可省略
+mysql> select * from person join card on person.cardId=card.id;
++------+--------+--------+------+-----------+
+| id   | name   | cardId | id   | name      |
++------+--------+--------+------+-----------+
+|    1 | 张三   |      1 |    1 | 饭卡      |
+|    2 | 李四   |      3 |    3 | 农行卡    |
++------+--------+--------+------+-----------+
+2 rows in set (0.00 sec)
+
+```
+##### 2. left join (左外连接)
+左外连接，会把左边表里数据全部取出，而右表数据有相等则显示，没有就补 NULL。
+```mysql
+mysql> select * from person left join card on person.cardId=card.id;
++------+--------+--------+------+-----------+
+| id   | name   | cardId | id   | name      |
++------+--------+--------+------+-----------+
+|    1 | 张三   |      1 |    1 | 饭卡      |
+|    2 | 李四   |      3 |    3 | 农行卡    |
+|    3 | 王五   |      6 | NULL | NULL      |
++------+--------+--------+------+-----------+
+3 rows in set (0.00 sec)
+
+## outer 可省略
+mysql> select * from person left outer join card on person.cardId=card.id;
++------+--------+--------+------+-----------+
+| id   | name   | cardId | id   | name      |
++------+--------+--------+------+-----------+
+|    1 | 张三   |      1 |    1 | 饭卡      |
+|    2 | 李四   |      3 |    3 | 农行卡    |
+|    3 | 王五   |      6 | NULL | NULL      |
++------+--------+--------+------+-----------+
+3 rows in set (0.00 sec)
+
+```
+##### 3. right join (右外连接)
+右外连接，会把右边表里数据全部取出，而左表数据有相等则显示，没有就补 NULL。
+```mysql
+mysql> select * from person right outer join card on person.cardId=card.id;
++------+--------+--------+------+-----------+
+| id   | name   | cardId | id   | name      |
++------+--------+--------+------+-----------+
+|    1 | 张三   |      1 |    1 | 饭卡      |
+|    2 | 李四   |      3 |    3 | 农行卡    |
+| NULL | NULL   |   NULL |    2 | 建行卡    |
+| NULL | NULL   |   NULL |    4 | 工商卡    |
+| NULL | NULL   |   NULL |    5 | 邮政卡    |
++------+--------+--------+------+-----------+
+5 rows in set (0.00 sec)
+
+## outer 可省略
+mysql> select * from person right join card on person.cardId=card.id;
++------+--------+--------+------+-----------+
+| id   | name   | cardId | id   | name      |
++------+--------+--------+------+-----------+
+|    1 | 张三   |      1 |    1 | 饭卡      |
+|    2 | 李四   |      3 |    3 | 农行卡    |
+| NULL | NULL   |   NULL |    2 | 建行卡    |
+| NULL | NULL   |   NULL |    4 | 工商卡    |
+| NULL | NULL   |   NULL |    5 | 邮政卡    |
++------+--------+--------+------+-----------+
+5 rows in set (0.00 sec)
+```
+##### 4. full join (全外连接)
+mysql 不支持 full join
+```mysql
+mysql> select * from person full join card on person.cardId=card.id;
+ERROR 1054 (42S22): Unknown column 'person.cardId' in 'on clause'
+
+## 左外连接与右外连接拼接
+mysql> select * from person left join card on person.cardId=card.id union select * from person right join card on person.cardId=card.id;
++------+--------+--------+------+-----------+
+| id   | name   | cardId | id   | name      |
++------+--------+--------+------+-----------+
+|    1 | 张三   |      1 |    1 | 饭卡      |
+|    2 | 李四   |      3 |    3 | 农行卡    |
+|    3 | 王五   |      6 | NULL | NULL      |
+| NULL | NULL   |   NULL |    2 | 建行卡    |
+| NULL | NULL   |   NULL |    4 | 工商卡    |
+| NULL | NULL   |   NULL |    5 | 邮政卡    |
++------+--------+--------+------+-----------+
+6 rows in set (0.00 sec)
 
 ```
 
